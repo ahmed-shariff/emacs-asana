@@ -133,6 +133,10 @@ Asana free plan limit is 50. Asana premium plan limit is 1500."
   "Pull the value for KEY out of ALIST."
   `(cdr (assoc ,key ,alist)))
 
+(defmacro asana-rassocar (key alist)
+  "Pull the value for reverse KEY out of ALIST."
+  `(car (rassoc ,key ,alist)))
+
 (defun asana-kbd (keyseq)
   "Create a prefixed kbd for KEYSEQ."
   (kbd (concat asana-keymap-prefix " " keyseq)))
@@ -251,7 +255,7 @@ Asana free plan limit is 50. Asana premium plan limit is 1500."
 		(let ((url-request-extra-headers (asana-headers-with-auth)))
 			(asana-read-response (url-retrieve-synchronously url nil nil asana-api-timeout)))))
 
-(defun asana-get (resource &optional params callback)
+(defun asana-get-unworking? (resource &optional params callback)
   "Send an HTTP GET to the Asana API for RESOURCE with PARAMS as the query string.
 If CALLBACK is provided, it is called after completion as (funcall CALLBACK DATA).
 DATA is a list parsed from the JSON API response."
@@ -277,6 +281,10 @@ DATA is a list parsed from the JSON API response."
 					(lambda (&rest _) (funcall callback (asana-read-response (current-buffer))))))
       (asana-read-response (url-retrieve-synchronously url nil nil asana-api-timeout)))))
 
+(defun asana-get (resource &optional params callback)
+  "Send a HTTP POST request to the Asana RESOURCE API. Include PARAMS as a JSON data blob. If CALLBACK is provided, run asynchronously."
+  (asana-request "GET" resource params callback))
+
 (defun asana-post (resource &optional params callback)
   "Send a HTTP POST request to the Asana RESOURCE API. Include PARAMS as a JSON data blob. If CALLBACK is provided, run asynchronously."
   (asana-request "POST" resource params callback))
@@ -292,6 +300,10 @@ DATA is a list parsed from the JSON API response."
 (defun asana-get-workspaces (&optional callback)
   "Get all Asana workspaces. If CALLBACK is provided, run asynchronously."
   (asana-assocdr 'workspaces (asana-get "/users/me" nil callback)))
+
+(defun asana-get-projects (&optional callback)
+  "Get all Asana projects. If CALLBACK is provided, run asynchronously."
+  (asana-get "/projects" nil callback))
 
 ;; unused
 (defun asana-get-sections (&optional callback)
